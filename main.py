@@ -33,7 +33,7 @@ for key in get_symbols(handle_json(uri)):
         # TODO: В symbol есть ключ filter который содержит массив фильтров
         for filter in key['filters']:
             # TODO: Нужный тип фильтра LOT_SIZE
-            if 'LOT_SIZE' in filter['filterType']:
+            if 'LOT_SIZE' == filter['filterType']:
                 print(str(key['symbol']) + ' => ' + json.dumps(filter))
             # print(filter['filterType'])
             # TODO: Нашёл почему дублиуются coins, кроме фильтра LOT_SIZE есть фильтр MARKET_LOT_SIZE. Как сделать более строгий выбор фильтра? Что то типа filterType === 'LOT_SIZE'.
