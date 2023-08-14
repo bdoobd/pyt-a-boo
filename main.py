@@ -1,39 +1,30 @@
-# from binance.client import Client
-# import keys
-# import pandas as pd
-# import time
-import requests
-import json
+from binance.client import Client
+import keys
+import pandas as pd
+import time
+import helper
+import get_symbols
 
-uri = 'https://api.binance.com/api/v3/exchangeInfo'
+coin_list = get_symbols.get_symbols()
 
-
-def handle_json(api_url):
-    #   coin = 'ASTRUSDT'
-    response = requests.get(api_url)
-    data = response.text
-
-    return data
+client = Client(keys.api_key, keys.secret_key)
 
 
-def get_symbols(raw_data):
+def top_coin():
+    all_tickers = pd.DataFrame(client.get_ticker())
+    usdt = all_tickers[all_tickers.symbol.str.contains("USDT")]
+    work = usdt[
+        ~((usdt.symbol.str.contains("UP")) | (usdt.symbol.str.contains("DOWN")))
+    ]
+    top_coin = work[work.priceChangePercent == work.priceChangePercent.max()]
+    top_coin = top_coin.symbol.values[0]
 
-    serialized = json.loads(raw_data)
-
-    return serialized['symbols']
+    return top_coin
 
 
-# formatted_string = json.dumps(get_symbols(handle_json(uri)), indent=2)
-# print(type(formatted_string))
+coin_lot_size = helper.get_lot_size(top_coin(), coin_list)
 
+print(f'COIN: ' + str(top_coin()) + ' with precision ' +
+      str(coin_lot_size))
 
-for key in get_symbols(handle_json(uri)):
-    # TODO:  Нужен coin в названии которого есть USDT
-    if 'USDT' in key['symbol']:
-        # TODO: В symbol есть ключ filter который содержит массив фильтров
-        for filter in key['filters']:
-            # TODO: Нужный тип фильтра LOT_SIZE
-            if 'LOT_SIZE' == filter['filterType']:
-                print(str(key['symbol']) + ' => ' + json.dumps(filter))
-            # print(filter['filterType'])
-            # TODO: Нашёл почему дублиуются coins, кроме фильтра LOT_SIZE есть фильтр MARKET_LOT_SIZE. Как сделать более строгий выбор фильтра? Что то типа filterType === 'LOT_SIZE'.
+print(helper.get_precision(coin_lot_size))
