@@ -9,7 +9,6 @@ import get_symbols
 
 coin_list = get_symbols.get_symbols()
 
-# client = Client(keys.api_key, keys.secret_key)
 client = Client(keys.api_key, keys.secret_key, testnet=True)
 
 
@@ -39,16 +38,6 @@ def get_last_data(symbol, period, interval):
 
 coin_lot_size = helper.get_lot_size(top_coin(), coin_list)
 
-# print(f'COIN: ' + str(top_coin()) + ' with precision ' +
-#   str(coin_lot_size))
-
-# print(helper.get_precision(coin_lot_size))
-
-# print(get_last_data(top_coin(), client.KLINE_INTERVAL_1MINUTE, '120'))
-
-# client_data = json.dumps(client.get_account())
-# print(client_data)
-
 
 def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     try:
@@ -70,23 +59,21 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     print(f'PRICE: ' + str(data_grid.Close.iloc[-1]))
     print(f'AVAILABLE QTY: ' + str(quantity))
 
-    # changes = (data_grid.Close.pct_change() + 1).cumprod().iloc[-1]
-
-    # print(changes)
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
         try:
-            # order = client.create_test_order(
-            #     symbol=coin,
-            #     side=client.SIDE_BUY,
-            #     type=client.ORDER_TYPE_MARKET,
-            #     quantity=quantity)
+            order = client.create_test_order(
+                symbol=coin,
+                side=client.SIDE_BUY,
+                type=client.ORDER_TYPE_MARKET,
+                quantity=quantity)
 
-            # if order:
-            #     print('Nice shopping!')
-            #     print(order)
+            if order:
+                print('Nice shopping!')
+                print(order)
 
             # FIXME: Не уверен, что стоимость монеты та же, что и табличке
-            coin_price = data_grid.Close.iloc[-1]
+            # coin_price = data_grid.Close.iloc[-1]
+            coin_price = float(order["fills"][0]["price"])
 
             trade_open = True
 
@@ -107,11 +94,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                 print(f'UPPER LIMIT: ' + str(upper_threshold))
                 print(f'LOWER LIMIT: ' + str(lower_threshold))
 
-                # print(data_grid.Close.iloc[-1])
-                # print(data_grid.Close[-1])
-
-                # if data_grid.Close.iloc[-1] <= lower_threshold or data_grid.Close.iloc[-1] <= upper_limit:
-                if coin_price <= lower_threshold or coin_price <= upper_limit:
+                if coin_price <= lower_threshold or coin_price >= upper_limit:
                     print('Time to sell coin')
                     try:
                         order = client.create_test_order(
