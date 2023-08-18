@@ -11,6 +11,8 @@ coin_list = get_symbols.get_symbols()
 
 client = Client(keys.api_key, keys.secret_key, testnet=True)
 
+# print(client.get_account())
+
 
 def top_coin():
     all_tickers = pd.DataFrame(client.get_ticker())
@@ -43,73 +45,85 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     try:
         coin = top_coin()
         data_grid = get_last_data(
-            top_coin(), client.KLINE_INTERVAL_1MINUTE, '120')
+            coin, client.KLINE_INTERVAL_1MINUTE, '120')
     except:
         print('BUY cycle check error, restating after 1 minute')
         time.sleep(61)
         coin = top_coin()
         data_grid = get_last_data(
-            top_coin(), client.KLINE_INTERVAL_1MINUTE, '120')
+            coin, client.KLINE_INTERVAL_1MINUTE, '120')
 
     decimals = helper.get_precision(coin_lot_size)
     quantity = round(amount / data_grid.Close.iloc[-1], decimals)
 
-    print('<**** Looking for BUY process ****>')
-    print(f'TOP COIN: ' + str(coin))
-    print(f'PRICE: ' + str(data_grid.Close.iloc[-1]))
-    print(f'AVAILABLE QTY: ' + str(quantity))
-
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
+
+        print('<**** Growing Coin found ****>')
+        print(f'TOP COIN: ' + str(coin))
+        print(f'PRICE: ' + str(data_grid.Close.iloc[-1]))
+        print(f'AVAILABLE QTY: ' + str(quantity))
+
         try:
-            order = client.create_test_order(
-                symbol=coin,
-                side=client.SIDE_BUY,
-                type=client.ORDER_TYPE_MARKET,
-                quantity=quantity)
+            # order = client.create_test_order(
+            #     symbol=coin,
+            #     side=client.SIDE_BUY,
+            #     type=client.ORDER_TYPE_MARKET,
+            #     quantity=quantity)
+
+            order = True
 
             if order:
                 print('Nice shopping!')
                 print(order)
 
             # FIXME: Не уверен, что стоимость монеты та же, что и табличке
-            # coin_price = data_grid.Close.iloc[-1]
-            coin_price = float(order["fills"][0]["price"])
+            coin_price = data_grid.Close.iloc[-1]
+            # coin_price = float(order["fills"][0]["price"])
 
             trade_open = True
 
-            while (trade_open):
+            while trade_open:
                 try:
                     data_grid = get_last_data(
-                        coin, client.KLINE_INTERVAL_1MINUTE, '120')
+                        coin, client.KLINE_INTERVAL_1MINUTE, '2')
                 except:
                     print('SELL cycle check error, restating after 1 minute')
                     time.sleep(61)
                     data_grid = get_last_data(
-                        coin, client.KLINE_INTERVAL_1MINUTE, '120')
+                        coin, client.KLINE_INTERVAL_1MINUTE, '2')
 
-                upper_threshold = coin_price * upper_limit
-                lower_threshold = coin_price * lower_limit
                 print('<**** SELL cycle check ****>')
+                print(f'UPPER LIMIT: ' + str(coin_price * upper_limit))
                 print(f'PRICE BOUGHT: ' + str(coin_price))
-                print(f'UPPER LIMIT: ' + str(upper_threshold))
-                print(f'LOWER LIMIT: ' + str(lower_threshold))
+                print(f'GRID PRICE: ' + str(data_grid.Close[-1]))
+                print(f'LOWER LIMIT: ' + str(coin_price * lower_limit))
+                # print(data_grid)
 
-                if coin_price <= lower_threshold or coin_price >= upper_limit:
+                if data_grid.Close[-1] <= coin_price * lower_limit or data_grid.Close[-1] >= coin_price * upper_limit:
                     print('Time to sell coin')
+                    print(data_grid.Close[-1])
                     try:
-                        order = client.create_test_order(
-                            symbol=coin,
-                            side=client.SIDE_SELL,
-                            type=client.ORDER_TYPE_MARKET,
-                            quantity=quantity
-                        )
-                    except:
-                        print('Error placing SELL order')
+                        # order = client.create_test_order(
+                        #     symbol=coin,
+                        #     side=client.SIDE_SELL,
+                        #     type=client.ORDER_TYPE_MARKET,
+                        #     quantity=quantity
+                        # )
 
+                        # print(f'SELL oreder ready as:')
+                        # print(order)
+
+                        order = True
+                    except Exception as sell_error:
+                        print('Error placing SELL order')
+                        print(f'Sell error: ' + str(sell_error))
+
+                    time.sleep(5)
                     break
 
-        except:
+        except Exception as err:
             print('Error placing BUY order')
+            print(f'Error:' + str(err))
 
     else:
         print('<=== No grows, no buy ===>')
