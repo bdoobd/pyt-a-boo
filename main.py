@@ -1,4 +1,5 @@
 from binance.client import Client
+from binance.exceptions import BinanceAPIException
 import test_keys
 import pandas as pd
 import time
@@ -76,13 +77,14 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     decimals = helper.get_precision(coin_lot_size)
     quantity = round(amount / data_grid.Close.iloc[-1], decimals)
 
+    # FIXME: При попытке купить монеты выскакивала ошибка фильтра, выделенных средств было меньше, чем минимально разрешённая покупка. Данные о монете находятся в client.get_symbol_info(symbol)
+
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
 
-        # print('<**** Growing Coin found ****>')
-        print('<**** Найдена растушая монета ****>')
+        print('<**** Найдена растущая монета ****>')
         print(f'Тип монеты: ' + str(coin))
         print(f'Стоимость: ' + str(data_grid.Close.iloc[-1]))
-        print(f'Можно купить: ' + str(quantity))
+        print(f'Количество для покупки: ' + str(quantity))
 
         try:
             order = client.create_order(
@@ -106,7 +108,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     data_grid = get_last_data(
                         coin, client.KLINE_INTERVAL_1MINUTE, '2')
                 except:
-                    print('SELL cycle check error, restating after 1 minute')
+                    print('Ошибка цикла продажи монеты, перезапуск через одну минуту')
                     time.sleep(61)
                     data_grid = get_last_data(
                         coin, client.KLINE_INTERVAL_1MINUTE, '2')
@@ -135,16 +137,18 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                         print('<**** Монета продана со следующими данными ****')
                         nice_sell_order = json.dumps(order, indent=4)
                         print(nice_sell_order)
-                    except Exception as sell_error:
+                    except BinanceAPIException as err:
                         print('Ошибка заказа на продажу монеты')
-                        print(f'Описание: ' + str(sell_error))
+                        print(f'Код ошибки: ' + str(err.status_code))
+                        print(f'Описание: ' + str(err.message))
 
                     time.sleep(5)
                     break
 
-        except Exception as err:
+        except BinanceAPIException as err:
             print('Ошибка заказа покупки монеты')
-            print(f'Описание:' + str(err))
+            print(f'Код ошибки: ' + str(err.status_code))
+            print(f'Описание: ' + str(err.message))
 
     else:
         print('<=== Не найден ни один актуальный вариант, ждёмс ===>')
