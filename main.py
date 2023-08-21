@@ -5,16 +5,13 @@ import pandas as pd
 import time
 import helper
 import get_symbols
+import datetime
 
 import json
 
 coin_list = get_symbols.get_symbols()
 
 client = Client(test_keys.api_key, test_keys.secret_key, testnet=True)
-
-nice_print = json.dumps(client.get_account(), indent=4)
-
-print(nice_print)
 
 """
 Функция поиска монеты USDT которая показывает максимальный рост на момент запуска функции
@@ -38,6 +35,14 @@ def top_coin():
     top_coin = top_coin.symbol.values[0]
 
     return top_coin
+
+
+symbol_info = client.get_symbol_info(top_coin())
+symbol_json = json.dumps(symbol_info, indent=4)
+
+
+with open('symbol.json', 'w') as output:
+    output.write(symbol_json)
 
 
 def get_last_data(symbol, period, interval):
@@ -151,9 +156,12 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
             print(f'Описание: ' + str(err.message))
 
     else:
-        print('<=== Не найден ни один актуальный вариант, ждёмс ===>')
-        time.sleep(10)
+        current_time = datetime.datetime.now()
+        formated_time = current_time.strftime('%H:%M:%S')
+        print(f'> ' + str(formated_time) +
+              ' <=== Не найден ни один актуальный вариант, ждёмс ===>')
+        time.sleep(5)
 
 
 while True:
-    run(10)
+    run(15)
