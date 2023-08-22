@@ -6,6 +6,8 @@ import time
 import helper
 import get_symbols
 import datetime
+import sys
+import math
 
 import json
 
@@ -65,6 +67,12 @@ def get_last_data(symbol, period, interval):
 
 # Степень точности указания стосмости монеты
 coin_lot_size = helper.get_lot_size(top_coin(), coin_list)
+# TODO: Переделать данное определение на quantity % step_size == 0
+symbol_info = client.get_symbol_info(top_coin())
+coin_price = client.get_symbol_ticker(symbol=top_coin())
+
+# print(json.dumps(symbol_info, indent=4))
+# print(json.dumps(coin_price, indent=4))
 
 
 def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
@@ -79,10 +87,33 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
         data_grid = get_last_data(
             coin, client.KLINE_INTERVAL_1MINUTE, '120')
 
-    decimals = helper.get_precision(coin_lot_size)
-    quantity = round(amount / data_grid.Close.iloc[-1], decimals)
+    # decimals = helper.get_precision(coin_lot_size)
+    # TODO: Количество определить с помощью фильтра LOT_SIZE
+    coin_price = client.get_symbol_ticker(symbol=top_coin())
+    # qty = amount / float(coin_price['price'])
 
-    # FIXME: При попытке купить монеты выскакивала ошибка фильтра, выделенных средств было меньше, чем минимально разрешённая покупка. Данные о монете находятся в client.get_symbol_info(symbol)
+    # print(f'Количество для покупкиЮ ' + str(qty))
+    # print(json.dumps(symbol_info['filters'], indent=4))
+
+    for filter in symbol_info['filters']:
+        if filter['filterType'] == 'LOT_SIZE':
+            step_size = float(filter['stepSize'])
+            min_qty = float(filter['minQty'])
+            max_qty = float(filter['maxQty'])
+            break
+
+    precision = int(round((-math.log(step_size, 10)), 0))
+    # print(step_size)
+    # print(precision)
+
+    quantity = round(amount / float(coin_price['price']), precision)
+
+    if quantity < min_qty or quantity > max_qty:
+        print('Объём заказа соответствует фильтру')
+
+    # print(f'Реальное количество для покупки: ' + str(quantity))
+
+    # quantity = round(amount / data_grid.Close.iloc[-1], decimals)
 
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
 
@@ -99,9 +130,14 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                 quantity=quantity)
 
             if order:
-                print('<**** Удачная покупка ****>')
+                print(f'<**** Удачная покупка, куплена монета ' +
+                      str(top_coin()) + ' ****>')
+
                 nice_order = json.dumps(order, indent=4)
-                print(nice_order)
+
+                with open('BUY_order_receipt.py', 'w') as buy_receipt:
+                    buy_receipt.write(nice_order)
+                # print(nice_order)
 
             coin_price = float(order["fills"][0]["price"])
             have_quantity = float(order['fills'][0]['qty'])
@@ -118,7 +154,10 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     data_grid = get_last_data(
                         coin, client.KLINE_INTERVAL_1MINUTE, '2')
 
-                print('<**** Анализ роста / падения монеты ****>')
+                analyze_time = datetime.datetime.now().strftime('%H:%M:%S')
+
+                print(f'> ' + str(analyze_time) +
+                      ' <**** Анализ роста / падения монеты ' + str(coin) + ' ****>')
                 print(f'Верхний лимит продажи: ' +
                       str(coin_price * upper_limit))
                 print(f'Стоимость покупки: ' + str(coin_price))
@@ -129,6 +168,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                 if data_grid.Close[-1] <= coin_price * lower_limit or data_grid.Close[-1] >= coin_price * upper_limit:
                     print('<**** Время продавать монету ****>')
+                    print(f'Количество для продажи ' +
+                          str(have_quantity) + ' шт')
                     # print(data_grid.Close[-1])
                     try:
                         order = client.create_order(
@@ -141,19 +182,30 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                         print('<**** Монета продана со следующими данными ****')
                         nice_sell_order = json.dumps(order, indent=4)
-                        print(nice_sell_order)
+
+                        with open('SELL_order_receipt.py', 'w') as sell_order:
+                            sell_order.write(nice_sell_order)
+                        # print(nice_sell_order)
                     except BinanceAPIException as err:
                         print('Ошибка заказа на продажу монеты')
-                        print(f'Код ошибки: ' + str(err.status_code))
+                        print(f'Статус код: ' + str(err.status_code))
+                        print(f'Ответ: ' + str(err.response))
+                        print(f'Код ошибки : ' + str(err.code))
                         print(f'Описание: ' + str(err.message))
+                        print(f'Запрос: ' + str(err.request))
 
-                    time.sleep(5)
-                    break
+                    # time.sleep(5)
+                    # TODO: После выявления всех ошибок раскоментировать break
+                    # break
+                    sys.exit(999000)
 
         except BinanceAPIException as err:
             print('Ошибка заказа покупки монеты')
-            print(f'Код ошибки: ' + str(err.status_code))
+            print(f'Статус код: ' + str(err.status_code))
+            print(f'Ответ: ' + str(err.response))
+            print(f'Код ошибки : ' + str(err.code))
             print(f'Описание: ' + str(err.message))
+            print(f'Запрос: ' + str(err.request))
 
     else:
         current_time = datetime.datetime.now()
