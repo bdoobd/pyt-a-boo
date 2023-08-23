@@ -1,25 +1,25 @@
 {
-    "symbol": "LTCUSDT",
-    "orderId": 2513929,
+    "symbol": "BNBUSDT",
+    "orderId": 1458329,
     "orderListId": -1,
-    "clientOrderId": "HwA5BKXvOgmPeR4Z7DxtSF",
-    "transactTime": 1692703926156,
+    "clientOrderId": "nCw5FMs3uruj6mt4VSGEhV",
+    "transactTime": 1692784325196,
     "price": "0.00000000",
-    "origQty": "0.22659000",
-    "executedQty": "0.22659000",
-    "cummulativeQuoteQty": "14.90282430",
+    "origQty": "0.07000000",
+    "executedQty": "0.07000000",
+    "cummulativeQuoteQty": "15.10600000",
     "status": "FILLED",
     "timeInForce": "GTC",
     "type": "MARKET",
     "side": "SELL",
-    "workingTime": 1692703926156,
+    "workingTime": 1692784325196,
     "fills": [
         {
-            "price": "65.77000000",
-            "qty": "0.22659000",
+            "price": "215.80000000",
+            "qty": "0.07000000",
             "commission": "0.00000000",
             "commissionAsset": "USDT",
-            "tradeId": 165584
+            "tradeId": 115359
         }
     ],
     "selfTradePreventionMode": "NONE"

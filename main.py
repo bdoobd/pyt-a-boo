@@ -3,15 +3,15 @@ from binance.exceptions import BinanceAPIException
 import test_keys
 import pandas as pd
 import time
-import helper
-import get_symbols
+# import helper
+# import get_symbols
 import datetime
 import sys
 import math
 
 import json
 
-coin_list = get_symbols.get_symbols()
+# coin_list = get_symbols.get_symbols()
 
 client = Client(test_keys.api_key, test_keys.secret_key, testnet=True)
 
@@ -39,14 +39,6 @@ def top_coin():
     return top_coin
 
 
-symbol_info = client.get_symbol_info(top_coin())
-symbol_json = json.dumps(symbol_info, indent=4)
-
-
-with open('symbol.json', 'w') as output:
-    output.write(symbol_json)
-
-
 def get_last_data(symbol, period, interval):
     # Получить исторические данные для монеты за заданный период
     data = pd.DataFrame(client.get_historical_klines(
@@ -66,10 +58,9 @@ def get_last_data(symbol, period, interval):
 
 
 # Степень точности указания стосмости монеты
-coin_lot_size = helper.get_lot_size(top_coin(), coin_list)
-# TODO: Переделать данное определение на quantity % step_size == 0
-symbol_info = client.get_symbol_info(top_coin())
-coin_price = client.get_symbol_ticker(symbol=top_coin())
+# coin_lot_size = helper.get_lot_size(top_coin(), coin_list)x
+# symbol_info = client.get_symbol_info(top_coin())
+# coin_price = client.get_symbol_ticker(symbol=top_coin())
 
 # print(json.dumps(symbol_info, indent=4))
 # print(json.dumps(coin_price, indent=4))
@@ -88,8 +79,12 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
             coin, client.KLINE_INTERVAL_1MINUTE, '120')
 
     # decimals = helper.get_precision(coin_lot_size)
-    # TODO: Количество определить с помощью фильтра LOT_SIZE
-    coin_price = client.get_symbol_ticker(symbol=top_coin())
+
+    coin_info = client.get_symbol_ticker(symbol=top_coin())
+    coin_price = float(coin_info['price'])
+
+    # print(json.dumps(coin_info, indent=4))
+    # sys.exit()
     # qty = amount / float(coin_price['price'])
 
     # print(f'Количество для покупкиЮ ' + str(qty))
@@ -106,8 +101,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     # print(step_size)
     # print(precision)
 
-    quantity = round(amount / float(coin_price['price']), precision)
-
+    quantity = round(amount / coin_price, precision)
+    # TODO: Придумать как прикрутить проверку этого условия
     if quantity < min_qty or quantity > max_qty:
         print('Объём заказа соответствует фильтру')
 
@@ -116,6 +111,12 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     # quantity = round(amount / data_grid.Close.iloc[-1], decimals)
 
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
+
+        symbol_info = client.get_symbol_info(coin)
+        symbol_json = json.dumps(symbol_info, indent=4)
+
+        with open('symbol.json', 'w') as output:
+            output.write(symbol_json)
 
         print('<**** Найдена растущая монета ****>')
         print(f'Тип монеты: ' + str(coin))
@@ -131,7 +132,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
             if order:
                 print(f'<**** Удачная покупка, куплена монета ' +
-                      str(top_coin()) + ' ****>')
+                      str(coin) + ' ****>')
 
                 nice_order = json.dumps(order, indent=4)
 
@@ -139,7 +140,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     buy_receipt.write(nice_order)
                 # print(nice_order)
 
-            coin_price = float(order["fills"][0]["price"])
+            trade_price = float(order["fills"][0]["price"])
             have_quantity = float(order['fills'][0]['qty'])
 
             trade_open = True
@@ -166,7 +167,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                       str(coin_price * lower_limit))
                 # print(data_grid)
 
-                if data_grid.Close[-1] <= coin_price * lower_limit or data_grid.Close[-1] >= coin_price * upper_limit:
+                if data_grid.Close[-1] <= trade_price * lower_limit or data_grid.Close[-1] >= trade_price * upper_limit:
                     print('<**** Время продавать монету ****>')
                     print(f'Количество для продажи ' +
                           str(have_quantity) + ' шт')
