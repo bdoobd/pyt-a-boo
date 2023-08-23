@@ -57,6 +57,13 @@ def get_last_data(symbol, period, interval):
     return data
 
 
+symbol_info = client.get_symbol_info(top_coin())
+symbol_json = json.dumps(symbol_info, indent=4)
+
+with open('symbol.json', 'w') as output:
+    output.write(symbol_json)
+
+
 # Степень точности указания стосмости монеты
 # coin_lot_size = helper.get_lot_size(top_coin(), coin_list)x
 # symbol_info = client.get_symbol_info(top_coin())
@@ -111,12 +118,6 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     # quantity = round(amount / data_grid.Close.iloc[-1], decimals)
 
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
-
-        symbol_info = client.get_symbol_info(coin)
-        symbol_json = json.dumps(symbol_info, indent=4)
-
-        with open('symbol.json', 'w') as output:
-            output.write(symbol_json)
 
         print('<**** Найдена растущая монета ****>')
         print(f'Тип монеты: ' + str(coin))
