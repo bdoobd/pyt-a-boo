@@ -7,3 +7,5 @@ test_keys.py
 BUY_order_receipt.py
 SELL_order_receipt.py
 symbol.json
+app.py
+test.py
