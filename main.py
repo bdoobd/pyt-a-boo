@@ -15,6 +15,56 @@ import json
 
 client = Client(test_keys.api_key, test_keys.secret_key, testnet=True)
 
+"""
+Функция поиска монеты USDT которая показывает максимальный рост на момент запуска функции
+
+return string Название монетеы
+"""
+
+
+def top_coin():
+    # Выбрать все тикеры для всех монет
+    all_tickers = pd.DataFrame(client.get_ticker())
+    # Отфильтровать тикеры в названиях которых есть USDT
+    usdt = all_tickers[all_tickers.symbol.str.contains("USDT")]
+    # Отфильтровать тикеры, удалить строки в названии которых есть строки UP и DOWN
+    work = usdt[
+        ~((usdt.symbol.str.contains("UP")) | (usdt.symbol.str.contains("DOWN")))
+    ]
+    # Выбрать строку из фрейма в котором столбец priceChangePercent имеет максимальное значение
+    top_coin = work[work.priceChangePercent == work.priceChangePercent.max()]
+    # Из отфильтрованной строки выбрать первую колонку с названием монеты
+    top_coin = top_coin.symbol.values[0]
+
+    return top_coin
+
+
+def get_last_data(symbol, period, interval):
+    # Получить исторические данные для монеты за заданный период
+    data = pd.DataFrame(client.get_historical_klines(
+        symbol, period, interval + 'min ago UTC'))
+    # Выбрать все строки и столбцы с первого по шестой (индекс с 0 по 5)
+    data = data.iloc[:, :6]
+    # Задать заголовки этим столбцам
+    data.columns = ['Time', 'Open', 'High', 'Low', 'Close', 'Volume']
+    # Проиндексировать столбец Time, типа столбца для сортировки
+    data = data.set_index('Time')
+    # Конвертирует дату в милисекундах в обычное отображение даты
+    data.index = pd.to_datetime(data.index, unit='ms')
+    # Конвертирует содержимое ячеек таблицы в число с плавающей точкой
+    data = data.astype('float')
+
+    return data
+
+
+# Степень точности указания стосмости монеты
+# coin_lot_size = helper.get_lot_size(top_coin(), coin_list)x
+# symbol_info = client.get_symbol_info(top_coin())
+# coin_price = client.get_symbol_ticker(symbol=top_coin())
+
+# print(json.dumps(symbol_info, indent=4))
+# print(json.dumps(coin_price, indent=4))
+
 
 def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
@@ -55,16 +105,17 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
         with open('symbol.json', 'w') as output:
             output.write(symbol_json)
 
-        if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
-            print('Объём заказа не соответствует фильтру')
-        else:
-            print('Операция удволетворяет фильтру LOT_SIZE')
-            try:
-                order = client.create_order(
-                    symbol=coin,
-                    side=client.SIDE_BUY,
-                    type=client.ORDER_TYPE_MARKET,
-                    quantity=quantity)
+        print('<**** Найдена растущая монета ****>')
+        print(f'Тип монеты: ' + str(coin))
+        print(f'Стоимость: ' + str(data_grid.Close.iloc[-1]))
+        print(f'Количество для покупки: ' + str(quantity))
+
+        try:
+            order = client.create_order(
+                symbol=coin,
+                side=client.SIDE_BUY,
+                type=client.ORDER_TYPE_MARKET,
+                quantity=quantity)
 
                 if order:
                     print(f'<**** Удачная покупка, куплена монета ' +
