@@ -5,7 +5,9 @@ __pycache__
 keys.py
 test_keys.py
 BUY_order_receipt.py
+BUY_order_receipt.json
 SELL_order_receipt.py
+SELL_order_receipt.json
 symbol.json
 app.py
 test.py

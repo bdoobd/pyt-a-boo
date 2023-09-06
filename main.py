@@ -72,7 +72,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                     nice_order = json.dumps(order, indent=4)
 
-                    with open('BUY_order_receipt.py', 'w') as buy_receipt:
+                    with open('BUY_order_receipt.json', 'w') as buy_receipt:
                         buy_receipt.write(nice_order)
 
                 trade_price = float(order["fills"][0]["price"])
@@ -122,7 +122,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                             print('<**** Монета продана со следующими данными ****')
                             nice_sell_order = json.dumps(order, indent=4)
 
-                            with open('SELL_order_receipt.py', 'w') as sell_order:
+                            with open('SELL_order_receipt.json', 'w') as sell_order:
                                 sell_order.write(nice_sell_order)
 
                         except BinanceAPIException as err:
