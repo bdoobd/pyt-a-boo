@@ -1,12 +1,12 @@
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
-from test_keys import api_key, secret_key
+from keys import api_key, secret_key
 from top_coin import top_coin
 import pandas as pd
 
 from last_data import get_last_data
 
-client = Client(api_key, secret_key, testnet=True)
+client = Client(api_key, secret_key)
 
 
 def data_grid():

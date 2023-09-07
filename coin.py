@@ -1,25 +1,13 @@
 from binance.client import Client
 import pandas as pd
-from test_keys import api_key, secret_key
-# import json
+from keys import api_key, secret_key
+
 import time
 
 
 def check_coin():
-    client = Client(api_key, secret_key, testnet=True)
+    client = Client(api_key, secret_key)
 
-    data = client.get_all_tickers()
-    """
-    Данные вывода get_all_tickers()
-    """
-    # data = data['symbol']
-    # print(json.dumps(data, indent=4))
-    # for item in data:
-    #     if 'USDT' in item['symbol']:
-    #         print(item['symbol'])
-    """
-    Данные вывода get_ticker()
-    """
     """
     Получить статистические данные динамического окна 24 часового изменения стоимости.
     По всей видимости на отображение данных играет роль доступа к данным, с ключами
@@ -29,19 +17,31 @@ def check_coin():
     # Конвертировать данные в табличный формат
     grid = pd.DataFrame(data)
     # Выбрать только символы в названии которых содержится строка USDT
-    grid = grid[grid.symbol.str.contains('USDT')]
+    usdt = grid[grid.symbol.str.contains('USDT')]
+    # Столбец priceChangePercent конвертировать в число с десятичными знаками
+    usdt.loc[:, 'priceChangePercent'] = usdt.loc[:,
+                                                 'priceChangePercent'].astype(float)
+    # Отфильтровать данные с положительным значение, искрючить отрицательные
+    usdt = usdt[usdt.priceChangePercent > 0]
     # Забрать только первые три столбца из таблицы для отображения данных.
     # Эти столбцы - название символа, изменение стоимости символа и
     # процентное изменение стоимости символа
-    grid = grid.iloc[:, :3]
+    usdt = usdt.iloc[:, :3]
     # Сортировка данных по столбцу priceChangePercent в порядке убывания.
     # Почему то сортировка отрицательных чисел происходит странно
     # после положительных значений как будто не учитывается знак минус и
     # сорировка опять выполняется от большего к меньшему значению.
     # Конвертируются в абсолютные числа???
-    grid = grid.sort_values(by='priceChangePercent', ascending=False)
+    usdt = usdt.sort_values(by='priceChangePercent', ascending=False)
 
-    print(grid)
+    pd.set_option('display.max_rows', None)
+
+    # Отображение даты и времени
+    # current_time = time.ctime()
+    current_time = time.strftime('%H:%M:%S')
+
+    print(f'Запрос: {current_time}')
+    print(usdt.head(10))
 
 
 if __name__ == '__main__':

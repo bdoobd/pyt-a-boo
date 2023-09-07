@@ -1,6 +1,6 @@
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
-from keys import api_key, secret_key
+from test_keys import api_key, secret_key
 # import pandas as pd
 import time
 from top_coin import top_coin
@@ -13,7 +13,7 @@ import sys
 
 import json
 
-client = Client(api_key, secret_key)
+client = Client(api_key, secret_key, testnet=True)
 
 
 def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
