@@ -20,6 +20,8 @@ def data_grid():
     coin_grid.index = pd.to_datetime(coin_grid.index, unit='ms')
     # coin_grid['Time'] = pd.to_datetime(coin_grid['Time'], unit='ms')
     coin_grid = coin_grid.astype('float')
+    coin_grid.loc[:, 'Close'] = coin_grid.loc[:, 'Close'].pct_change() + 1
+    coin_grid.loc[:, 'Close'] = coin_grid.loc[:, 'Close'].cumprod()
 
     print(coin_grid)
     # print(get_last_data(coin_data))
