@@ -133,10 +133,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                             print(f'Описание: ' + str(err.message))
                             print(f'Запрос: ' + str(err.request))
 
-                    # time.sleep(5)
-                    # TODO: После выявления всех ошибок раскоментировать break
-                    # break
-                        sys.exit(999000)
+                        break
 
             except BinanceAPIException as err:
                 print('Ошибка заказа покупки монеты')
