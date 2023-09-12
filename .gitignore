@@ -11,3 +11,6 @@ SELL_order_receipt.json
 symbol.json
 app.py
 test.py
+writetolog.py
+
+logs/*

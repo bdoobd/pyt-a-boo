@@ -5,6 +5,6 @@ import json
 
 client = Client(api_key, secret_key)
 
-nice_print = json.dumps(client.get_account(), indent=4)
+# nice_print = json.dumps(client.get_account(), indent=4)
 
-print(nice_print)
+# print(nice_print)
