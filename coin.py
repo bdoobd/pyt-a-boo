@@ -26,7 +26,9 @@ def check_coin():
     # Забрать только первые три столбца из таблицы для отображения данных.
     # Эти столбцы - название символа, изменение стоимости символа и
     # процентное изменение стоимости символа
-    usdt = usdt.iloc[:, :3]
+    # TODO: Добавить для отображения lastPrice и volume
+    # usdt = usdt.iloc[:, :3]
+    usdt = usdt[['symbol', 'lastPrice', 'priceChangePercent', 'volume']]
     # Сортировка данных по столбцу priceChangePercent в порядке убывания.
     # Почему то сортировка отрицательных чисел происходит странно
     # после положительных значений как будто не учитывается знак минус и
@@ -35,12 +37,13 @@ def check_coin():
     usdt = usdt.sort_values(by='priceChangePercent', ascending=False)
 
     pd.set_option('display.max_rows', None)
+    usdt.columns = ['Монета', 'Стоимость', '% изменение', 'Объём']
 
     # Отображение даты и времени
-    # current_time = time.ctime()
+
     current_time = time.strftime('%H:%M:%S')
 
-    print(f'Запрос: {current_time}')
+    print(f'\nЗапрос: {current_time}\n')
     print(usdt.head(10))
 
 
