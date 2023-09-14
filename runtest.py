@@ -6,7 +6,8 @@ import time
 from top_coin import top_coin
 from last_data import get_last_data
 import symbol_data
-from create_logfile import create_log_file_name, write_log_header
+# from create_logfile import create_log_file_name, write_log_header, write_buy_receipt
+import create_logfile as log
 import datetime
 import sys
 # import math
@@ -55,8 +56,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
         with open('symbol.json', 'w') as output:
             output.write(symbol_json)
 
-        log_file_name = create_log_file_name(coin)
-        write_log_header(log_file_name, coin)
+        log_file_name = log.create_log_file_name(coin)
+        log.write_log_header(log_file_name, coin)
 
         if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
             print('Объём заказа не соответствует фильтру')
@@ -77,9 +78,13 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                     with open('BUY_order_receipt.json', 'w') as buy_receipt:
                         buy_receipt.write(nice_order)
+
+                log.write_buy_receipt(log_file_name, order)
                 # FIXME: В квитке может быть пустой массив fills[], получить стоимость и количесво оттуда не получится
-                trade_price = float(order["fills"][0]["price"])
-                have_quantity = float(order['fills'][0]['qty'])
+                trade_price = float(order["fills"][0]["price"]) if len(
+                    order['fills']) > 0 else coin_price
+                have_quantity = float(order['fills'][0]['qty']) if len(
+                    order['fills']) > 0 else quantity
 
                 trade_open = True
 
@@ -125,6 +130,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                             print('<**** Монета продана со следующими данными ****')
                             nice_sell_order = json.dumps(order, indent=4)
                             # FIXME: Квиток может содержать несколько элементов массива fills[] с разными стоимостями и количеством
+                            log.write_cell_receipt(log_file_name, order)
+
                             with open('SELL_order_receipt.json', 'w') as sell_order:
                                 sell_order.write(nice_sell_order)
 

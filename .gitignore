@@ -13,4 +13,4 @@ app.py
 test.py
 writetolog.py
 
-logs/*
+logs/
