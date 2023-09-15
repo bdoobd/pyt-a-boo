@@ -1,16 +1,12 @@
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from test_keys import api_key, secret_key
-# import pandas as pd
 import time
 from top_coin import top_coin
 from last_data import get_last_data
 import symbol_data
-# from create_logfile import create_log_file_name, write_log_header, write_buy_receipt
 import create_logfile as log
 import datetime
-import sys
-# import math
 
 import json
 
@@ -80,7 +76,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                         buy_receipt.write(nice_order)
 
                 log.write_buy_receipt(log_file_name, order)
-                # FIXME: В квитке может быть пустой массив fills[], получить стоимость и количесво оттуда не получится
+                # FIXME: Не очень хороший вариант для обхода ошибки наличия значения, подуамить как переделать
                 trade_price = float(order["fills"][0]["price"]) if len(
                     order['fills']) > 0 else coin_price
                 have_quantity = float(order['fills'][0]['qty']) if len(
@@ -109,7 +105,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                           ' <**** Анализ роста / падения монеты ' + str(coin) + ' ****>')
                     print(f'Верхний лимит продажи: ' +
                           str(coin_price * upper_limit))
-                    print(f'Стоимость покупки: ' + str(coin_price))
+                    print(f'Стоимость покупки: ' + str(trade_price))
                     print(f'Торгуется сейчас: ' + str(data_grid.Close[-1]))
                     print(f'Нижний лимит продажи: ' +
                           str(coin_price * lower_limit))

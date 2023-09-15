@@ -32,19 +32,23 @@ def write_buy_receipt(file, data):
             logfile.write(f'Стоимость: {fills["price"]}\n')
             logfile.write(f'Количество: {fills["qty"]}\n')
         else:
-            logfile.write('Пустой массив fills')
+            logfile.write('Пустой массив fills\n')
 
 
 def write_cell_receipt(file, data):
     with open(file, 'a') as logfile:
         logfile.write('Продажа монеты\n')
-        logfile.write(f'Тип данных CELL: {type(data)}')
-        for item in data:
-            logfile.write(f'Key {item} => value {data[item]}\n')
+        # logfile.write(f'Тип данных CELL: {type(data)}')
+        # for item in data:
+        #     logfile.write(f'Key {item} => value {data[item]}\n')
 
         if len(data['fills']) > 0:
-            fills = data['fills'][0]
-            logfile.write(f'Стоимость продажи: {fills["price"]}')
-            logfile.write(f'Продано количесво: {fills["qty"]}')
+            # TODO: Обойти весь массив fills для вывода данных о продаже.
+            # Попадаются квитки с несколькими элементами массива
+            for row in data['fills']:
+                # fills = data['fills'][0]
+                logfile.write('Раздел квитка\n')
+                logfile.write(f'Стоимость продажи: {row["price"]}\n')
+                logfile.write(f'Продано количесво: {row["qty"]}\n')
         else:
-            logfile.write('Опять пустой массив fills')
+            logfile.write('Опять пустой массив fills\n')
