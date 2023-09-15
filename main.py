@@ -1,15 +1,13 @@
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from keys import api_key, secret_key
-# import pandas as pd
+
 import time
 from top_coin import top_coin
 from last_data import get_last_data
 import symbol_data
-# import get_symbols
+import create_logfile as log
 import datetime
-import sys
-# import math
 
 import json
 
@@ -55,6 +53,9 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
         with open('symbol.json', 'w') as output:
             output.write(symbol_json)
 
+        log_file_name = log.create_log_file_name(coin)
+        log.write_log_header(log_file_name, coin)
+
         if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
             print('Объём заказа не соответствует фильтру')
         else:
@@ -75,8 +76,12 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     with open('BUY_order_receipt.json', 'w') as buy_receipt:
                         buy_receipt.write(nice_order)
 
-                trade_price = float(order["fills"][0]["price"])
-                have_quantity = float(order['fills'][0]['qty'])
+                log.write_buy_receipt(log_file_name, order)
+
+                trade_price = float(order["fills"][0]["price"]) if len(
+                    order['fills']) > 0 else coin_price
+                have_quantity = float(order['fills'][0]['qty']) if len(
+                    order['fills']) > 0 else quantity
 
                 trade_open = True
 
@@ -101,7 +106,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                           ' <**** Анализ роста / падения монеты ' + str(coin) + ' ****>')
                     print(f'Верхний лимит продажи: ' +
                           str(coin_price * upper_limit))
-                    print(f'Стоимость покупки: ' + str(coin_price))
+                    print(f'Стоимость покупки: ' + str(trade_price))
                     print(f'Торгуется сейчас: ' + str(data_grid.Close[-1]))
                     print(f'Нижний лимит продажи: ' +
                           str(coin_price * lower_limit))
@@ -121,6 +126,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                             print('<**** Монета продана со следующими данными ****')
                             nice_sell_order = json.dumps(order, indent=4)
+
+                            log.write_cell_receipt(log_file_name, order)
 
                             with open('SELL_order_receipt.json', 'w') as sell_order:
                                 sell_order.write(nice_sell_order)
@@ -146,8 +153,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
     else:
         current_time = datetime.datetime.now()
         formated_time = current_time.strftime('%H:%M:%S')
-        print(f'> ' + str(formated_time) +
-              ' <=== Не найден ни один актуальный вариант, ждёмс ===>')
+        print(
+            f'>{str(formated_time)} <=== Монета {coin} не подходит для покупки, ждёмс ===>')
         time.sleep(5)
 
 

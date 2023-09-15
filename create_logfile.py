@@ -38,15 +38,9 @@ def write_buy_receipt(file, data):
 def write_cell_receipt(file, data):
     with open(file, 'a') as logfile:
         logfile.write('Продажа монеты\n')
-        # logfile.write(f'Тип данных CELL: {type(data)}')
-        # for item in data:
-        #     logfile.write(f'Key {item} => value {data[item]}\n')
 
         if len(data['fills']) > 0:
-            # TODO: Обойти весь массив fills для вывода данных о продаже.
-            # Попадаются квитки с несколькими элементами массива
             for row in data['fills']:
-                # fills = data['fills'][0]
                 logfile.write('Раздел квитка\n')
                 logfile.write(f'Стоимость продажи: {row["price"]}\n')
                 logfile.write(f'Продано количесво: {row["qty"]}\n')
