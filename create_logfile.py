@@ -4,14 +4,16 @@ import json
 
 
 def create_log_file_name(coin):
-    logdir = f'{os.getcwd()}/logs/'
+    # logdir = f'{os.getcwd()}/logs/'
+    logdir = os.path.join(os.getcwd(), 'logs')
     if not (os.path.exists(logdir)):
         os.makedirs(logdir)
 
     if (os.path.isdir(logdir)):
         date_format = datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
-        log_file = f'{logdir}{date_format}_{coin}.log'
-
+        filename = f'{date_format}_{coin}.log'
+        # log_file = f'{logdir}{date_format}_{coin}.log'
+        log_file = os.path.join(logdir, filename)
     return log_file
 
 
