@@ -10,7 +10,7 @@ def create_log_file_name(coin):
         logdir.mkdir()
 
     if logdir.exists() and logdir.is_dir():
-        date_format = datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
+        date_format = datetime.now().strftime('%Y_%m_%d-%H%M%S')
         filename = f'{date_format}_{coin}.log'
         log_file = logdir / filename
     return log_file
