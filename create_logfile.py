@@ -17,7 +17,7 @@ def create_log_file_name(coin):
 
 
 def write_log_header(file, coin):
-    with open(file, 'a') as logfile:
+    with open(file, 'a', encoding='UTF-8') as logfile:
         line_1 = f'========== {datetime.now().strftime("%d.%m.%Y %H:%M:%S")} =========\n'
         line_2 = f'============== {coin} ==============\n'
         logfile.write(line_1)
@@ -26,7 +26,7 @@ def write_log_header(file, coin):
 
 def write_buy_receipt(file, data):
 
-    with open(file, 'a') as logfile:
+    with open(file, 'a', encoding='UTF-8') as logfile:
         logfile.write(f'Куплена монета {data["symbol"]}\n')
         if len(data['fills']) > 0:
             fills = data['fills'][0]
@@ -37,7 +37,7 @@ def write_buy_receipt(file, data):
 
 
 def write_cell_receipt(file, data):
-    with open(file, 'a') as logfile:
+    with open(file, 'a', encoding='UTF-8') as logfile:
         logfile.write('Продажа монеты\n')
 
         if len(data['fills']) > 0:

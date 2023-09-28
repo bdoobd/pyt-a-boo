@@ -107,11 +107,12 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     print(f'Верхний лимит продажи: ' +
                           str(coin_price * upper_limit))
                     print(f'Стоимость покупки: ' + str(trade_price))
-                    print(f'Торгуется сейчас: ' + str(data_grid.Close[-1]))
+                    print(f'Торгуется сейчас: ' +
+                          str(data_grid.Close.iloc[-1]))
                     print(f'Нижний лимит продажи: ' +
                           str(coin_price * lower_limit))
 
-                    if data_grid.Close[-1] <= trade_price * lower_limit or data_grid.Close[-1] >= trade_price * upper_limit:
+                    if data_grid.Close.iloc[-1] <= trade_price * lower_limit or data_grid.Close.iloc[-1] >= trade_price * upper_limit:
                         print('<**** Время продавать монету ****>')
                         print(f'Количество для продажи ' +
                               str(have_quantity) + ' шт')
