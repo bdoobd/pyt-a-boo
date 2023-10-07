@@ -6,7 +6,7 @@ import json
 
 def create_log_file_name(coin):
     logdir = Path.cwd() / Path('logs')
-    if not logdir.exists:
+    if not logdir.exists():
         logdir.mkdir()
 
     if logdir.exists() and logdir.is_dir():
@@ -47,3 +47,13 @@ def write_cell_receipt(file, data):
                 logfile.write(f'Продано количесво: {row["qty"]}\n')
         else:
             logfile.write('Опять пустой массив fills\n')
+
+
+def write_error(file, error):
+    with open(file, 'a', encoding='UTF-8') as logfile:
+        logfile.write('=== Произошла ошибка ===')
+        logfile.write(f'Статус код: {error.status_code}')
+        logfile.write(f'Ответ: {error.response}')
+        logfile.write(f'Код ошибки: {error.code}')
+        logfile.write(f'Описание: {error.message}')
+        logfile.write(f'Запрос: {error.request}')

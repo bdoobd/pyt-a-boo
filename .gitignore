@@ -12,5 +12,9 @@ symbol.json
 app.py
 test.py
 writetolog.py
+logging.py
+logger_test.py
 
 logs/
+logfiles/
+classes/

@@ -53,7 +53,6 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
             output.write(symbol_json)
 
         log_file_name = log.create_log_file_name(coin)
-        log.write_log_header(log_file_name, coin)
 
         if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
             print('Объём заказа не соответствует фильтру')
@@ -75,14 +74,16 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     with open('BUY_order_receipt.json', 'w') as buy_receipt:
                         buy_receipt.write(nice_order)
 
-                log.write_buy_receipt(log_file_name, order)
-                # FIXME: Не очень хороший вариант для обхода ошибки наличия значения, подуамить как переделать
-                trade_price = float(order["fills"][0]["price"]) if len(
-                    order['fills']) > 0 else coin_price
-                have_quantity = float(order['fills'][0]['qty']) if len(
-                    order['fills']) > 0 else quantity
+                    log.write_log_header(log_file_name, coin)
+                    log.write_buy_receipt(log_file_name, order)
 
-                trade_open = True
+                # FIXME: Не очень хороший вариант для обхода ошибки наличия значения, подуамить как переделать
+                    trade_price = float(order["fills"][0]["price"]) if len(
+                        order['fills']) > 0 else coin_price
+                    have_quantity = float(order['fills'][0]['qty']) if len(
+                        order['fills']) > 0 else quantity
+
+                    trade_open = True
 
                 while trade_open:
                     interval = '2'
@@ -126,35 +127,25 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                             print('<**** Монета продана со следующими данными ****')
                             nice_sell_order = json.dumps(order, indent=4)
-                            # FIXME: Квиток может содержать несколько элементов массива fills[] с разными стоимостями и количеством
+
                             log.write_cell_receipt(log_file_name, order)
 
                             with open('SELL_order_receipt.json', 'w') as sell_order:
                                 sell_order.write(nice_sell_order)
 
                         except BinanceAPIException as err:
-                            print('Ошибка заказа на продажу монеты')
-                            print(f'Статус код: ' + str(err.status_code))
-                            print(f'Ответ: ' + str(err.response))
-                            print(f'Код ошибки : ' + str(err.code))
-                            print(f'Описание: ' + str(err.message))
-                            print(f'Запрос: ' + str(err.request))
+                            log.write_error(log_file_name, err)
 
                         break
 
             except BinanceAPIException as err:
-                print('Ошибка заказа покупки монеты')
-                print(f'Статус код: ' + str(err.status_code))
-                print(f'Ответ: ' + str(err.response))
-                print(f'Код ошибки : ' + str(err.code))
-                print(f'Описание: ' + str(err.message))
-                print(f'Запрос: ' + str(err.request))
+                log.write_error(log_file_name, err)
 
     else:
         current_time = datetime.datetime.now()
-        formated_time = current_time.strftime('%H:%M:%S')
+        formatted_time = current_time.strftime('%H:%M:%S')
         print(
-            f'>{str(formated_time)} <=== Монета {coin} не подходит для покупки, ждёмс ===>')
+            f'>{str(formatted_time)} <=== Монета {coin} не подходит для покупки, ждёмс ===>')
         time.sleep(5)
 
 
