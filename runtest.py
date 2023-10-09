@@ -1,6 +1,7 @@
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
-from test_keys import api_key, secret_key
+from keys import api_key_test, secret_key_test
+from config import look_back, sell_look_back, trade_amount
 import time
 from top_coin import top_coin
 from last_data import get_last_data
@@ -9,25 +10,24 @@ import create_logfile as log
 import datetime
 
 import json
+from classes.logger import Log
 
-client = Client(api_key, secret_key, testnet=True)
+client = Client(api_key_test, secret_key_test, testnet=True)
 
 
 def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
-    interval = '120'
-
     try:
         coin = top_coin(client)
         data = client.get_historical_klines(
-            coin, client.KLINE_INTERVAL_1MINUTE, interval + 'min ago UTC')
+            coin, client.KLINE_INTERVAL_1MINUTE, look_back)
         data_grid = get_last_data(data)
     except:
         print('Ошибка процесса покупки монеты, перезапуск через одну минуту')
         time.sleep(61)
         coin = top_coin(client)
         data = client.get_historical_klines(
-            coin, client.KLINE_INTERVAL_1MINUTE, interval + 'min ago UTC')
+            coin, client.KLINE_INTERVAL_1MINUTE, look_back)
         data_grid = get_last_data(data)
 
     if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
@@ -53,6 +53,7 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
             output.write(symbol_json)
 
         log_file_name = log.create_log_file_name(coin)
+        logger = Log(coin)
 
         if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
             print('Объём заказа не соответствует фильтру')
@@ -77,7 +78,9 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     log.write_log_header(log_file_name, coin)
                     log.write_buy_receipt(log_file_name, order)
 
-                # FIXME: Не очень хороший вариант для обхода ошибки наличия значения, подуамить как переделать
+                    logger.wrireHead()
+                    logger.writeBuyReceipt(order)
+
                     trade_price = float(order["fills"][0]["price"]) if len(
                         order['fills']) > 0 else coin_price
                     have_quantity = float(order['fills'][0]['qty']) if len(
@@ -86,18 +89,18 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     trade_open = True
 
                 while trade_open:
-                    interval = '2'
+                    # interval = '2'
 
                     try:
                         data = client.get_historical_klines(
-                            coin, client.KLINE_INTERVAL_1MINUTE, interval + 'min ago UTC')
+                            coin, client.KLINE_INTERVAL_1MINUTE, sell_look_back)
                         data_grid = get_last_data(data)
                     except:
                         print(
                             'Ошибка цикла продажи монеты, перезапуск через одну минуту')
                         time.sleep(61)
                         data = client.get_historical_klines(
-                            coin, client.KLINE_INTERVAL_1MINUTE, interval + 'min ago UTC')
+                            coin, client.KLINE_INTERVAL_1MINUTE, sell_look_back)
                         data_grid = get_last_data(data)
 
                     analyze_time = datetime.datetime.now().strftime('%H:%M:%S')
@@ -130,6 +133,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                             log.write_cell_receipt(log_file_name, order)
 
+                            logger.writeSellReceipt(order)
+
                             with open('SELL_order_receipt.json', 'w') as sell_order:
                                 sell_order.write(nice_sell_order)
 
@@ -150,4 +155,4 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
 
 while True:
-    run(15)
+    run(trade_amount)
