@@ -46,13 +46,29 @@ class Log:
         with open(self.logFile, 'a', encoding='UTF-8') as log:
             log.write(f'======== Квиток покупки ========\n')
             log.write(f'Куплена монета: {data["symbol"]} *********\n')
-            if data['fills'] > 0:
-                fills_array = data['fills'][0]
-                log.write(f'Куплено количество: {fills_array["qty"]}\n')
-                log.write(f'Стоимость покупки: {fills_array["price"]}\n')
+            if len(data['fills']) > 0:
+                for row in data['fils']:
+                    log.write(f'Куплено количество: {row["qty"]}\n')
+                    log.write(f'Стоимость покупки: {row["price"]}\n')
+            else:
+                log.write('Массив fills[] пустой\n')
+
             log.write(f'{json.dumps(data, indent=4)}\n')
 
     def writeSellReceipt(self, data):
         with open(self.logFile, 'a', encoding='UTF-8') as log:
             log.write(f'======== Квиток продажи ========\n')
+            log.write(f'Монета {data["symbol"]} продана ***********\n')
+            if len(data['fills'] > 0):
+                for row in data['fills']:
+                    log.write(f'Продано количество: {row["qty"]}\n')
+                    log.write(f'Стоимость продажи: {row["price"]}\n')
+            else:
+                log.write('Массив fills[] пустой')
+
             log.write(f'{json.dumps(data, indent=4)}\n')
+
+    def writeError(self, error):
+        with open(self.logFile, 'a', encoding='UTF-8') as log:
+            log.write('Произошла ошибка!!!\n')
+            log.write(error)
