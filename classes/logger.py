@@ -47,7 +47,7 @@ class Log:
             log.write(f'======== Квиток покупки ========\n')
             log.write(f'Куплена монета: {data["symbol"]} *********\n')
             if len(data['fills']) > 0:
-                for row in data['fils']:
+                for row in data['fills']:
                     log.write(f'Куплено количество: {row["qty"]}\n')
                     log.write(f'Стоимость покупки: {row["price"]}\n')
             else:
