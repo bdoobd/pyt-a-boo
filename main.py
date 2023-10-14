@@ -3,6 +3,7 @@ from binance.exceptions import BinanceAPIException
 from keys import api_key, secret_key
 from config import look_back, sell_look_back, trade_amount
 import time
+import sys
 from top_coin import top_coin
 from last_data import get_last_data
 import symbol_data
@@ -11,6 +12,7 @@ import datetime
 
 import json
 from classes.logger import Log
+
 client = Client(api_key, secret_key)
 
 
@@ -45,11 +47,11 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
         print(f'Request price: ' + str(coin_price))
         print(f'Количество для покупки: ' + str(quantity))
 
-        symbol_info = client.get_symbol_info(coin)
-        symbol_json = json.dumps(symbol_info, indent=4)
+        # symbol_info = client.get_symbol_info(coin)
+        # symbol_json = json.dumps(symbol_info, indent=4)
 
-        with open('symbol.json', 'w') as output:
-            output.write(symbol_json)
+        # with open('symbol.json', 'w') as output:
+        #     output.write(symbol_json)
 
         log_file_name = log.create_log_file_name(coin)
         logger = Log(coin)
@@ -69,10 +71,10 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     print(f'<**** Удачная покупка, куплена монета ' +
                           str(coin) + ' ****>')
 
-                    nice_order = json.dumps(order, indent=4)
+                    # nice_order = json.dumps(order, indent=4)
 
-                    with open('BUY_order_receipt.json', 'w') as buy_receipt:
-                        buy_receipt.write(nice_order)
+                    # with open('BUY_order_receipt.json', 'w') as buy_receipt:
+                    #     buy_receipt.write(nice_order)
 
                     log.write_log_header(log_file_name, coin)
                     log.write_buy_receipt(log_file_name, order)
@@ -126,20 +128,25 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                             )
 
                             print('<**** Монета продана со следующими данными ****')
-                            nice_sell_order = json.dumps(order, indent=4)
-                            log.write_cell_receipt(log_file_name, order)
-                            logger.writeSellReceipt(order)
+                            # nice_sell_order = json.dumps(order, indent=4)
+                            # with open('SELL_order_receipt.json', 'w') as sell_order:
+                            #     sell_order.write(nice_sell_order)
 
-                            with open('SELL_order_receipt.json', 'w') as sell_order:
-                                sell_order.write(nice_sell_order)
+                            log.write_cell_receipt(log_file_name, order)
+
+                            logger.writeSellReceipt(order)
 
                         except BinanceAPIException as err:
                             log.write_error(log_file_name, err)
+
+                            logger.writeError(err)
 
                         break
 
             except BinanceAPIException as err:
                 log.write_error(log_file_name, err)
+
+                logger.writeError(err)
 
     else:
         current_time = datetime.datetime.now()
@@ -150,4 +157,8 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
 
 while True:
-    run(trade_amount)
+    try:
+        run(trade_amount)
+    except KeyboardInterrupt:
+        print('  Обнаружено нажатие сочетания клавиш Ctrl + C, скрипт закончил работу')
+        sys.exit()

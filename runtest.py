@@ -81,7 +81,6 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
                     logger.wrireHead()
                     logger.writeBuyReceipt(order)
-
                     trade_price = float(order["fills"][0]["price"]) if len(
                         order['fills']) > 0 else coin_price
                     have_quantity = float(order['fills'][0]['qty']) if len(
@@ -90,7 +89,6 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     trade_open = True
 
                 while trade_open:
-                    # interval = '2'
 
                     try:
                         data = client.get_historical_klines(
