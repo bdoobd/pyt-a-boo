@@ -8,12 +8,18 @@ BUY_order_receipt.py
 BUY_order_receipt.json
 SELL_order_receipt.py
 SELL_order_receipt.json
+create_logfile.py
 symbol.json
 app.py
 test.py
 writetolog.py
 logging.py
 logger_test.py
+coin_test.py
+notes.txt
+responce.py
+
 
 logs/
 logfiles/
+.vscode/

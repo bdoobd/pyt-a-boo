@@ -36,7 +36,7 @@ class Log:
 
         return filename
 
-    def wrireHead(self):
+    def writeHead(self):
         with open(self.logFile, 'a', encoding='UTF-8') as log:
             log.write(
                 f'========== {datetime.now().strftime("%d.%m.%Y %H:%M:%S")} =====\n')
@@ -71,4 +71,9 @@ class Log:
     def writeError(self, error):
         with open(self.logFile, 'a', encoding='UTF-8') as log:
             log.write('Произошла ошибка!!!\n')
-            log.write(error)
+            # log.write(f'Статус код: {error.status_code}\n')
+            # log.write(f'Ответ: {error.response}\n')
+            # log.write(f'Код ошибки: {error.code}\n')
+            # log.write(f'Описание: {error.message}\n')
+            # log.write(f'Запрос: {error.request}\n')
+            log.write(str(error))

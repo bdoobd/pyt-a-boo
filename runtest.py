@@ -7,11 +7,11 @@ import sys
 from top_coin import top_coin
 from last_data import get_last_data
 import symbol_data
-import create_logfile as log
+# import create_logfile as log
+from classes.logger import Log
 import datetime
 
 import json
-from classes.logger import Log
 
 client = Client(api_key_test, secret_key_test, testnet=True)
 
@@ -47,13 +47,6 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
         print(f'Request price: ' + str(coin_price))
         print(f'Количество для покупки: ' + str(quantity))
 
-        # symbol_info = client.get_symbol_info(coin)
-        # symbol_json = json.dumps(symbol_info, indent=4)
-
-        # with open('symbol.json', 'w') as output:
-        #     output.write(symbol_json)
-
-        log_file_name = log.create_log_file_name(coin)
         logger = Log(coin)
 
         if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
@@ -71,16 +64,9 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                     print(f'<**** Удачная покупка, куплена монета ' +
                           str(coin) + ' ****>')
 
-                    # nice_order = json.dumps(order, indent=4)
-
-                    # with open('BUY_order_receipt.json', 'w') as buy_receipt:
-                    #     buy_receipt.write(nice_order)
-
-                    log.write_log_header(log_file_name, coin)
-                    log.write_buy_receipt(log_file_name, order)
-
-                    logger.wrireHead()
+                    logger.writeHead()
                     logger.writeBuyReceipt(order)
+
                     trade_price = float(order["fills"][0]["price"]) if len(
                         order['fills']) > 0 else coin_price
                     have_quantity = float(order['fills'][0]['qty']) if len(
@@ -128,24 +114,20 @@ def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
                             )
 
                             print('<**** Монета продана со следующими данными ****')
-                            # nice_sell_order = json.dumps(order, indent=4)
-                            # with open('SELL_order_receipt.json', 'w') as sell_order:
-                            #     sell_order.write(nice_sell_order)
-
-                            log.write_cell_receipt(log_file_name, order)
 
                             logger.writeSellReceipt(order)
+                            # TODO: Если монета продана произвести обмен на USDT с помощью POST /sapi/v1/convert/getQuote
 
                         except BinanceAPIException as err:
-                            log.write_error(log_file_name, err)
-
+                            logger.writeError(err)
+                        except Exception as err:
                             logger.writeError(err)
 
                         break
 
             except BinanceAPIException as err:
-                log.write_error(log_file_name, err)
-
+                logger.writeError(err)
+            except Exception as err:
                 logger.writeError(err)
 
     else:
