@@ -59,7 +59,7 @@ class Log:
         with open(self.logFile, 'a', encoding='UTF-8') as log:
             log.write(f'======== Квиток продажи ========\n')
             log.write(f'Монета {data["symbol"]} продана ***********\n')
-            if len(data['fills'] > 0):
+            if len(data['fills']) > 0:
                 for row in data['fills']:
                     log.write(f'Продано количество: {row["qty"]}\n')
                     log.write(f'Стоимость продажи: {row["price"]}\n')

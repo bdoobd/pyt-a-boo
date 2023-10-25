@@ -16,6 +16,9 @@ def top_coin(client):
     work = usdt[
         ~((usdt.symbol.str.contains("UP")) | (usdt.symbol.str.contains("DOWN")))
     ]
+    # Конвертировать значения в стобце priceChangePercent в число с плавающей точкой для поиска максимального значения
+    work.loc[:, 'priceChangePercent'] = work.loc[:,
+                                                 'priceChangePercent'].astype(float)
     # Выбрать строку из фрейма в котором столбец priceChangePercent имеет максимальное значение
     top_coin = work[work.priceChangePercent == work.priceChangePercent.max()]
     # Из отфильтрованной строки выбрать первую колонку с названием монеты
