@@ -15,9 +15,9 @@ test.py
 writetolog.py
 logging.py
 logger_test.py
-coin_test.py
 notes.txt
 responce.py
+klines_test.py
 
 
 logs/
