@@ -51,9 +51,10 @@ def write_cell_receipt(file, data):
 
 def write_error(file, error):
     with open(file, 'a', encoding='UTF-8') as logfile:
-        logfile.write('=== Произошла ошибка ===')
-        logfile.write(f'Статус код: {error.status_code}')
-        logfile.write(f'Ответ: {error.response}')
-        logfile.write(f'Код ошибки: {error.code}')
-        logfile.write(f'Описание: {error.message}')
-        logfile.write(f'Запрос: {error.request}')
+        logfile.write('=== Произошла ошибка ===\n')
+        # logfile.write(f'Статус код: {error.status_code}\n')
+        # logfile.write(f'Ответ: {error.response}\n')
+        # logfile.write(f'Код ошибки: {error.code}\n')
+        # logfile.write(f'Описание: {error.message}\n')
+        # logfile.write(f'Запрос: {error.request}\n')
+        logfile.write(str(error))

@@ -1,4 +1,5 @@
 from classes.coin import Coin
+import matplotlib.pyplot as plt
 import helper
 import time
 import sys
@@ -16,20 +17,27 @@ def trackCoin():
 
     row = int(input('Выбери строку для анализа данных '))
 
-    choosen = assets.iloc[row - 1]
+    chosen = assets.iloc[row - 1]
 
-    coin.setTopCoin(choosen.symbol)
+    coin.setTopCoin(chosen.symbol)
 
     prevPrice = 0
+
+    # print(type(coin.currentSymbolPrice(coin.getSymbol())))
 
     while True:
         try:
             currentPrice = coin.getAssetPrice()[1]
 
+            # red_string = f'{helper.RED}{currentPrice}{helper.RESET}'
             red_string = f'{helper.RED}{currentPrice}{helper.RESET}'
+            # green_string = f'{helper.GREEN}{currentPrice}{helper.RESET}'
             green_string = f'{helper.GREEN}{currentPrice}{helper.RESET}'
             print(
                 f'{helper.printDateNow()} - {coin.getSymbol()} стоимость {green_string if currentPrice >= prevPrice else red_string}')
+            tickerPrice = coin.currentSymbolPrice(coin.getSymbol())
+            # print(
+            #     f'Symbol {tickerPrice["symbol"]} price {tickerPrice["price"]}')
             prevPrice = currentPrice
             time.sleep(5)
         except KeyboardInterrupt:

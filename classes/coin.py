@@ -4,6 +4,10 @@ import pandas as pd
 from config import look_back, sell_look_back, trade_amount
 import time
 
+import requests
+import datetime
+import helper
+
 
 class Coin:
 
@@ -206,3 +210,18 @@ class Coin:
     def getOrderBookTicker(self, symbol=''):
         params = {'symbol': symbol}
         return self.client.get_orderbook_ticker(symbol=symbol)
+
+    def currentSymbolPrice(self, symbol=''):
+        url = 'https://api.binance.com/api/v3/ticker/price'
+
+        headers = {
+            'X-MBX-APIKEY': keys.api_key
+        }
+
+        params = {
+            'symbol': self.getSymbol()
+        }
+
+        data = requests.get(url, params=params, headers=headers)
+
+        return data.json()
