@@ -1,146 +1,112 @@
-from binance.client import Client
-from binance.exceptions import BinanceAPIException
-from keys import api_key_test, secret_key_test
-from config import look_back, sell_look_back, trade_amount
+from classes.coin import Coin
+from classes.receipt import Receipt
+from classes.logger import Log
+from classes.trade import Trade
+import config
 import time
 import sys
-from top_coin import top_coin
-from last_data import get_last_data
-import symbol_data
-# import create_logfile as log
-from classes.logger import Log
-import datetime
-
-import json
-
-client = Client(api_key_test, secret_key_test, testnet=True)
+import helper
 
 
-def run(amount, lower_limit=0.985, upper_limit=1.02, trade_open=False):
+def run(amount, position, lower_limit=0.985, upper_limit=1.02, trade_open=False):
 
-    try:
-        coin = top_coin(client)
-        data = client.get_historical_klines(
-            coin, client.KLINE_INTERVAL_1MINUTE, look_back)
-        data_grid = get_last_data(data)
-    except:
-        print('Ошибка процесса покупки монеты, перезапуск через одну минуту')
-        time.sleep(61)
-        coin = top_coin(client)
-        data = client.get_historical_klines(
-            coin, client.KLINE_INTERVAL_1MINUTE, look_back)
-        data_grid = get_last_data(data)
+    coin = Coin('usdt', 'test')
+    # coin = Coin('usdt')
 
-    if (data_grid.Close.pct_change() + 1).cumprod().iloc[-1] > 1:
-        coin_info = client.get_symbol_ticker(symbol=coin)
-        coin_price = float(coin_info['price'])
+    assets = coin.mostValuable()
 
-        symbol_exchange_data = client.get_symbol_info(coin)
+    chosen = assets.iloc[int(position) - 1]
 
-        precision = symbol_data.get_precision(symbol_exchange_data)
+    coin.setTopCoin(chosen.symbol)
 
-        quantity = round(amount / coin_price, precision)
+    if coin.analyzeAndBuy():
+        print(coin.getSymbol())
+        qty = coin.getQuantity(amount=amount)
 
-        print('<**** Найдена растущая монета ****>')
-        print(f'Тип монеты: ' + str(coin))
-        print(f'Стоимость: ' + str(data_grid.Close.iloc[-1]))
-        print(f'Request price: ' + str(coin_price))
-        print(f'Количество для покупки: ' + str(quantity))
+        if qty > coin.getMaxQty() or qty < coin.getMinQty():
+            raise Exception(
+                f'Количество {qty} для заказа не соответствует фильтру LOT_SIZE')
 
-        logger = Log(coin)
+        trade = Trade(coin.getClient(), coin.getSymbol())
 
-        if quantity < symbol_data.get_minQty(symbol_exchange_data) or quantity > symbol_data.get_maxQty(symbol_exchange_data):
-            print('Объём заказа не соответствует фильтру')
-        else:
-            print('Операция удволетворяет фильтру LOT_SIZE')
-            try:
-                order = client.create_order(
-                    symbol=coin,
-                    side=client.SIDE_BUY,
-                    type=client.ORDER_TYPE_MARKET,
-                    quantity=quantity)
+        buy_order = trade.createOrder(side='buy', qty=qty)
 
-                if order:
-                    print(f'<**** Удачная покупка, куплена монета ' +
-                          str(coin) + ' ****>')
+        if buy_order:
+            receipt = Receipt()
+            receipt.getBuyReceipt(buy_order)
+            print(f'Выбрана и куплена монета {coin.getSymbol()}')
+            print(
+                f'Количество: {receipt.buyReceiptQuantity()}, стоимость {receipt.buyReceiptPrice()}')
 
-                    logger.writeHead()
-                    logger.writeBuyReceipt(order)
+            logger = Log(coin.getSymbol())
+            logger.writeHead()
+            logger.writeBuyReceipt(buy_order)
 
-                    trade_price = float(order["fills"][0]["price"]) if len(
-                        order['fills']) > 0 else coin_price
-                    have_quantity = float(order['fills'][0]['qty']) if len(
-                        order['fills']) > 0 else quantity
+            trade_open = True
 
-                    trade_open = True
+            receipt_price = receipt.buyReceiptPrice()
+            receipt_qty = receipt.buyReceiptQuantity()
 
-                while trade_open:
+            previous_price = 0
 
-                    try:
-                        data = client.get_historical_klines(
-                            coin, client.KLINE_INTERVAL_1MINUTE, sell_look_back)
-                        data_grid = get_last_data(data)
-                    except:
-                        print(
-                            'Ошибка цикла продажи монеты, перезапуск через одну минуту')
-                        time.sleep(61)
-                        data = client.get_historical_klines(
-                            coin, client.KLINE_INTERVAL_1MINUTE, sell_look_back)
-                        data_grid = get_last_data(data)
+            while trade_open:
 
-                    analyze_time = datetime.datetime.now().strftime('%H:%M:%S')
+                current_price = coin.currentSymbolPrice()
 
-                    print(f'> ' + str(analyze_time) +
-                          ' <**** Анализ роста / падения монеты ' + str(coin) + ' ****>')
-                    print(f'Верхний лимит продажи: ' +
-                          str(coin_price * upper_limit))
-                    print(f'Стоимость покупки: ' + str(trade_price))
-                    print(f'Торгуется сейчас: ' +
-                          str(data_grid.Close.iloc[-1]))
-                    print(f'Нижний лимит продажи: ' +
-                          str(coin_price * lower_limit))
+                up_limit = coin.setLimit(
+                    price=receipt_price, percent=config.upper_limit)
+                static_low_limit = coin.setLimit(
+                    price=receipt_price, percent=config.lower_limit)
+                dynamic_low_limit = coin.setDynamicLowLimit(
+                    current_price=current_price, trade_price=receipt_price,  percent=config.lower_limit)
 
-                    if data_grid.Close.iloc[-1] <= trade_price * lower_limit or data_grid.Close.iloc[-1] >= trade_price * upper_limit:
-                        print('<**** Время продавать монету ****>')
-                        print(f'Количество для продажи ' +
-                              str(have_quantity) + ' шт')
+                print(f'{helper.printDateNow()}')
+                print(f'Верхний предел торговли: {up_limit}')
+                print(
+                    f'Монета торгуется сейчас: {helper.colorText("green", current_price) if current_price >= previous_price else helper.colorText("red", current_price)}')
+                print(
+                    f'Динамический нижний предел торговли: {helper.colorText("orange", dynamic_low_limit)}')
+                print(
+                    f'Статический нижний предел торговли: {static_low_limit}\n')
 
-                        try:
-                            order = client.create_order(
-                                symbol=coin,
-                                side=client.SIDE_SELL,
-                                type=client.ORDER_TYPE_MARKET,
-                                quantity=have_quantity
-                            )
+                previous_price = current_price
 
-                            print('<**** Монета продана со следующими данными ****')
+                if current_price > up_limit or current_price < dynamic_low_limit:
+                    sell_order = trade.createOrder(
+                        side='sell', qty=receipt_qty)
 
-                            logger.writeSellReceipt(order)
-                            # TODO: Если монета продана произвести обмен на USDT с помощью POST /sapi/v1/convert/getQuote
-
-                        except BinanceAPIException as err:
-                            logger.writeError(err)
-                        except Exception as err:
-                            logger.writeError(err)
+                    if sell_order:
+                        receipt.getSellReceipt(sell_order)
+                        logger.writeSellReceipt(sell_order)
 
                         break
+                    else:
+                        raise Exception('Неудача с продажей монеты')
 
-            except BinanceAPIException as err:
-                logger.writeError(err)
-            except Exception as err:
-                logger.writeError(err)
+            sys.exit()
+        else:
+            raise Exception('Не удалось купить монету')
 
     else:
-        current_time = datetime.datetime.now()
-        formatted_time = current_time.strftime('%H:%M:%S')
         print(
-            f'>{str(formatted_time)} <=== Монета {coin} не подходит для покупки, ждёмс ===>')
+            f'>{helper.printDateNow()} <=== Монета {coin.getSymbol()} не подходит для покупки, ждёмс ===>')
         time.sleep(5)
 
 
 while True:
     try:
-        run(trade_amount)
+        if len(sys.argv) < 2:
+            raise ValueError('Отсутствует параметр скрипта')
+
+        run(amount=config.trade_amount, position=sys.argv[1])
     except KeyboardInterrupt:
         print('  Обнаружено нажатие сочетания клавиш Ctrl + C, скрипт закончил работу')
+        sys.exit()
+
+    except ValueError:
+        print('Укажи порядковый номер строки монеты для работы скрипта')
+        sys.exit()
+
+    except Exception as error:
+        print(f'Произошла ошибка {error}')
         sys.exit()

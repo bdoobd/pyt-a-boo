@@ -18,6 +18,9 @@ logger_test.py
 notes.txt
 responce.py
 klines_test.py
+client.py
+keycopy.txt
+old_runtest.py
 
 
 logs/
