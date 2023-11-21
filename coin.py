@@ -44,10 +44,10 @@ def check_coin():
     current_time = time.strftime('%H:%M:%S')
 
     print(f'\nЗапрос: {current_time}\n')
-    print(usdt.head(10))
+    print(usdt.head(20))
 
 
 if __name__ == '__main__':
-    while True:
-        check_coin()
-        time.sleep(5)
+    # while True:
+    check_coin()
+    # time.sleep(5)

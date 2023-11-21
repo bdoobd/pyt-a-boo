@@ -187,7 +187,8 @@ class Coin:
         Returns:
             float: Динамическая лимитная стоимость
         """
-        self.max = trade_price
+        if self.max == 0:
+            self.max = trade_price
 
         if current_price > self.max:
             self.max = current_price

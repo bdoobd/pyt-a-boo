@@ -14,3 +14,9 @@ class Receipt:
 
     def buyReceiptQuantity(self) -> str:
         return float(self.buy_receipt['fills'][0]['qty'])
+
+    def sellReceptPrice(self):
+        if len(self.sell_receipt['fills']) > 1:
+            print('Combined sell receipt')
+        else:
+            return float(self.sell_receipt['fills'][0]['price'])
