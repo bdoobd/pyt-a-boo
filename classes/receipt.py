@@ -20,3 +20,6 @@ class Receipt:
             print('Combined sell receipt')
         else:
             return float(self.sell_receipt['fills'][0]['price'])
+
+    def getTradeCommission(self):
+        return float(self.buy_receipt['fills'][0]['commission']) if float(self.buy_receipt['fills'][0]['commission']) > 0 else 0

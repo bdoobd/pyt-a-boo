@@ -70,18 +70,22 @@ def run(amount, position, lower_limit=0.985, upper_limit=1.02, trade_open=False)
                     f'Статический нижний предел торговли: {static_low_limit}\n')
 
                 previous_price = current_price
+                sell_qty = receipt_qty - receipt.getTradeCommission()
 
                 if current_price > up_limit or current_price < dynamic_low_limit:
-                    sell_order = trade.createOrder(
-                        side='sell', qty=receipt_qty)
+                    try:
+
+                        sell_order = trade.createOrder(
+                            side='sell', qty=sell_qty)
+                    except:
+                        raise Exception(
+                            f'Неудача с продажей монеты, количество {sell_qty}')
 
                     if sell_order:
                         receipt.getSellReceipt(sell_order)
                         logger.writeSellReceipt(sell_order)
 
                         break
-                    else:
-                        raise Exception('Неудача с продажей монеты')
 
             sys.exit()
         else:
