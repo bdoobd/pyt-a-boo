@@ -70,7 +70,8 @@ def run(amount, position, lower_limit=0.985, upper_limit=1.02, trade_open=False)
                     f'Статический нижний предел торговли: {static_low_limit}\n')
 
                 previous_price = current_price
-                sell_qty = receipt_qty - receipt.getTradeCommission()
+                sell_qty = coin.getSellQuantity(
+                    receipt_qty - receipt.getTradeCommission())
 
                 if current_price > up_limit or current_price < dynamic_low_limit:
                     try:
@@ -84,6 +85,8 @@ def run(amount, position, lower_limit=0.985, upper_limit=1.02, trade_open=False)
                     if sell_order:
                         receipt.getSellReceipt(sell_order)
                         logger.writeSellReceipt(sell_order)
+                        print(
+                            f'Актив {coin.getSymbol()} удачно продан, детали в файле логов')
 
                         break
 

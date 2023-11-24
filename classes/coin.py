@@ -130,6 +130,16 @@ class Coin:
             if filter['filterType'] == 'LOT_SIZE':
                 return float(filter['stepSize'])
 
+    def getTickSize(self):
+        for filter in self.asset_info['filters']:
+            if filter['filterType'] == 'PRICE_FILTER':
+                return float(filter['tickSize'])
+
+    def getFilteredPrice(self, amount):
+        precision = int(round(-math.log(self.getTickSize(), 10), 0))
+
+        return round(float(amount), precision)
+
     def getQuantity(self, amount):
         precision = int(round(-math.log(self.getStepSize(), 10), 0))
 
@@ -145,6 +155,10 @@ class Coin:
         for filter in self.asset_info['filters']:
             if filter['filterType'] == 'LOT_SIZE':
                 return float(filter['minQty'])
+
+    def getSellQuantity(self, amount):
+        precision = int(round(-math.log(self.getTickSize(), 10), 0))
+        return round(amount, precision)
 
     def getSymbol(self) -> str:
         """Получить название символьной пары (монеты)
@@ -237,25 +251,25 @@ class Coin:
 
         return float(ticker['price'])
 
-    def createOrder(self, side, quantity):
-        operation = self.client.SIDE_BUY if side == 'buy' else self.client.SIDE_SELL
-        try:
-            order = self.client.create_order(
-                symbol=self.top_coin,
-                side=operation,
-                type=self.client.ORDER_TYPE_MARKET,
-                quantity=quantity
-            )
+    # def createOrder(self, side, quantity):
+    #     operation = self.client.SIDE_BUY if side == 'buy' else self.client.SIDE_SELL
+    #     try:
+    #         order = self.client.create_order(
+    #             symbol=self.top_coin,
+    #             side=operation,
+    #             type=self.client.ORDER_TYPE_MARKET,
+    #             quantity=quantity
+    #         )
 
-            self.buy_receipt = order
-        except BinanceAPIException as error:
-            print(f'Произошла ошибка покупки {self.top_coin}\n')
-            print(f'Статус код: {error.status_code}\n')
-            print(f'Ответ: {error.response}\n')
-            print(f'Код ошибки: {error.code}\n')
-            print(f'Описание: {error.message}\n')
-            print(f'Запрос: {error.request}\n')
-        except Exception as err:
-            print(f'Произошла ошибка {err}')
-        else:
-            return order
+    #         self.buy_receipt = order
+    #     except BinanceAPIException as error:
+    #         print(f'Произошла ошибка покупки {self.top_coin}\n')
+    #         print(f'Статус код: {error.status_code}\n')
+    #         print(f'Ответ: {error.response}\n')
+    #         print(f'Код ошибки: {error.code}\n')
+    #         print(f'Описание: {error.message}\n')
+    #         print(f'Запрос: {error.request}\n')
+    #     except Exception as err:
+    #         print(f'Произошла ошибка {err}')
+    #     else:
+    #         return order

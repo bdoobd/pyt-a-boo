@@ -30,3 +30,20 @@ class Trade:
             print(f'Произошла ошибка {err}')
         else:
             return order
+
+    def createLimitSellOrder(self, qty: float, price: float) -> None:
+        try:
+            order = self.client.order_limit_sell(
+                symbol=self.asset, quantity=qty, price=price)
+
+        except BinanceAPIException as error:
+            print(f'Произошла ошибка покупки {self.asset}\n')
+            print(f'Статус код: {error.status_code}\n')
+            print(f'Ответ: {error.response}\n')
+            print(f'Код ошибки: {error.code}\n')
+            print(f'Описание: {error.message}\n')
+            print(f'Запрос: {error.request}\n')
+        except Exception as err:
+            print(f'Произошла ошибка {err}')
+        else:
+            return order
