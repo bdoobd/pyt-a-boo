@@ -8,7 +8,7 @@ import sys
 import helper
 
 
-def run(amount, position, lower_limit=0.985, upper_limit=1.02, trade_open=False):
+def run(amount, position, trade_open=False):
 
     coin = Coin('usdt', 'test')
     # coin = Coin('usdt')
